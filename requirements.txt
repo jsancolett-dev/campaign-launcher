@@ -1,0 +1,5 @@
+# requirements.txt
+streamlit
+psycopg2-binary
+SQLAlchemy
+pandas
