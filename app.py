@@ -1,7 +1,7 @@
-# app.py (CampaignLauncher v1.0)
+# app.py (CampaignLauncher v1.1 - Correção de Secrets)
 
 import streamlit as st
-import os
+import os  # <--- GARANTA QUE ESTA LINHA ESTEJA AQUI
 from sqlalchemy import create_engine, text
 import pandas as pd
 
@@ -10,12 +10,12 @@ st.set_page_config(page_title="Campaign Launcher", layout="centered")
 st.title("🚀 Campaign Launcher - Lançador de Campanhas")
 st.markdown("---")
 
-# --- Conexão com o Banco de Dados (O mesmo do AgencyOS) ---
-db_url = st.secrets.get("DATABASE_URL") # Usaremos os "Secrets" do Streamlit desta vez
+# --- Conexão com o Banco de Dados (Método Padrão) ---
+db_url = os.environ.get("DATABASE_URL")
 
 if not db_url:
-    st.error("ERRO CRÍTICO: A variável de ambiente 'DATABASE_URL' não foi encontrada nos Secrets.")
-    st.info("Por favor, adicione a Internal Database URL do seu banco 'agency-os-db' nos Secrets deste app no Render.")
+    st.error("ERRO CRÍTICO: A variável de ambiente 'DATABASE_URL' não foi encontrada.")
+    st.info("Por favor, adicione a Internal Database URL do seu banco 'agency-os-db' nas Environment Variables deste app no Render.")
     st.stop()
 
 # Ajusta a URL para o dialeto do SQLAlchemy
@@ -35,11 +35,9 @@ def carregar_clientes():
         with engine.connect() as connection:
             query = "SELECT id, nome_empresa, adscode FROM clientes ORDER BY nome_empresa ASC"
             df_clientes = pd.read_sql(query, connection)
-            # Cria uma coluna formatada para exibição no selectbox
             df_clientes['display_name'] = df_clientes['nome_empresa'] + " (" + df_clientes['adscode'] + ")"
             return df_clientes
     except Exception as e:
-        # Se a tabela 'clientes' não for encontrada, dá uma mensagem amigável
         if "relation \"clientes\" does not exist" in str(e):
              st.error("A tabela 'clientes' não foi encontrada no banco de dados. Verifique se o AgencyOS já foi executado e criou as tabelas.")
         else:
@@ -60,9 +58,7 @@ if not df_clientes.empty:
     )
 
     if cliente_selecionado:
-        # Apenas para teste, mostra o cliente que foi selecionado
         st.success(f"Cliente selecionado: **{cliente_selecionado}**")
         st.info("Próximo passo: Adicionar os campos de configuração da campanha e a lógica da API do Google Ads.")
 else:
     st.warning("Nenhum cliente encontrado no banco de dados. Por favor, cadastre clientes no AgencyOS primeiro.")
-
